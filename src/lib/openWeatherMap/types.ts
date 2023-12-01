@@ -35,12 +35,17 @@ type Current = {
 	dew_point: number;
 	uvi: number;
 	clouds: number;
+	rain?: Rain;
 	visibility: number;
 	wind_speed: number;
 	wind_deg: number;
 	wind_gust: number;
 	weather: Weather[];
 	pop?: number;
+};
+
+type Rain = {
+	'1h': number;
 };
 
 type Weather = {

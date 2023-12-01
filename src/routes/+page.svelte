@@ -1,11 +1,26 @@
 <script lang="ts">
+	import WeatherCard from '$lib/components/WeatherCard.svelte';
+
 	export let data;
 
+	let forecastOffset = 0;
+
 	console.log({ data });
+
+	const selectedForecasts = data.data.hourly.slice(forecastOffset, forecastOffset + 30);
 </script>
 
 <main class="container">
-	<section>Hourly forecast</section>
+	<section class="forecast">
+		{#each selectedForecasts as forecast}
+			<WeatherCard
+				rainfall={forecast.rain?.['1h'] ?? 0}
+				temperature={forecast.temp}
+				time={forecast.dt}
+				uvIndex={forecast.uvi}
+			/>
+		{/each}
+	</section>
 	<section>At-a-glance day rating</section>
 	<section class="recommendations">Recommendations</section>
 </main>
@@ -23,5 +38,13 @@
 
 	.recommendations {
 		grid-column: 1 / span 2;
+	}
+
+	.forecast {
+		display: flex;
+		flex-direction: row;
+		overflow-x: scroll;
+		gap: 1rem;
+		padding: 1rem;
 	}
 </style>
