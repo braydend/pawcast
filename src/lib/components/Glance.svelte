@@ -60,9 +60,11 @@
 	section {
 		padding: 1rem;
 	}
+
 	h2 {
 		margin: 0;
 	}
+
 	div {
 		display: flex;
 		flex-direction: column;
