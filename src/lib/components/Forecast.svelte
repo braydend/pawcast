@@ -12,6 +12,7 @@
 			temperature={report.temp}
 			time={report.dt}
 			uvIndex={report.uvi}
+			weather={report.weather[0]}
 		/>
 	{/each}
 </section>

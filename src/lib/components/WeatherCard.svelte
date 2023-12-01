@@ -1,10 +1,12 @@
 <script lang="ts">
+	import type { Weather } from '$lib/openWeatherMap/types';
 	import dayjs from 'dayjs';
 
 	export let temperature: number;
 	export let uvIndex: number;
 	export let time: number;
 	export let rainfall: number;
+	export let weather: Weather;
 
 	const formattedTime = dayjs.unix(time).format('h:mm a D MMM');
 
@@ -28,6 +30,7 @@
 
 <div class="container" style={`--colour: ${colour}`}>
 	<p class="time">{formattedTime}</p>
+	<img src={`https://openweathermap.org/img/wn/${weather.icon}.png`} alt={weather.description} />
 	<p>{temperature}&deg;C</p>
 	<p>UV: {uvIndex}</p>
 	<p>Rain: {rainfall}mm</p>

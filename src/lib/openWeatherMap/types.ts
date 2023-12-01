@@ -48,7 +48,7 @@ type Rain = {
 	'1h': number;
 };
 
-type Weather = {
+export type Weather = {
 	id: number;
 	main: string;
 	description: string;
