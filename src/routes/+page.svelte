@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Forecast from '$lib/components/Forecast.svelte';
+	import Glance from '$lib/components/Glance.svelte';
 
 	export let data;
 
@@ -11,11 +12,19 @@
 	console.log({ data });
 
 	const selectedForecasts = data.data.hourly.slice(forecastOffset, forecastOffset + 24);
+	const maxTemperature = selectedForecasts.reduce((acc, { temp }) => {
+		if (acc > temp) return temp;
+		return acc;
+	}, 0);
+	const maxUvIndex = selectedForecasts.reduce((acc, { uvi }) => {
+		if (acc > uvi) return uvi;
+		return acc;
+	}, 0);
 </script>
 
 <main class="container">
 	<Forecast forecast={selectedForecasts} />
-	<section>At-a-glance day rating</section>
+	<Glance {maxTemperature} {maxUvIndex} />
 	<section class="recommendations">Recommendations</section>
 </main>
 
