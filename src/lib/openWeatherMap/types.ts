@@ -11,7 +11,7 @@ export type Forecast = {
 	lon: number;
 	timezone: string;
 	timezone_offset: number;
-	hourly: Current[];
+	hourly: WeatherReport[];
 	alerts: Alert[];
 };
 
@@ -24,7 +24,7 @@ type Alert = {
 	tags: string[];
 };
 
-type Current = {
+export type WeatherReport = {
 	dt: number;
 	sunrise?: number;
 	sunset?: number;

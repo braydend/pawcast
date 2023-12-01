@@ -1,5 +1,5 @@
 <script lang="ts">
-	import WeatherCard from '$lib/components/WeatherCard.svelte';
+	import Forecast from '$lib/components/Forecast.svelte';
 
 	export let data;
 
@@ -14,16 +14,7 @@
 </script>
 
 <main class="container">
-	<section class="forecast">
-		{#each selectedForecasts as forecast}
-			<WeatherCard
-				rainfall={forecast.rain?.['1h'] ?? 0}
-				temperature={forecast.temp}
-				time={forecast.dt}
-				uvIndex={forecast.uvi}
-			/>
-		{/each}
-	</section>
+	<Forecast forecast={selectedForecasts} />
 	<section>At-a-glance day rating</section>
 	<section class="recommendations">Recommendations</section>
 </main>
@@ -41,13 +32,5 @@
 
 	.recommendations {
 		grid-column: 1 / span 2;
-	}
-
-	.forecast {
-		display: flex;
-		flex-direction: row;
-		overflow-x: scroll;
-		gap: 1rem;
-		padding: 1rem;
 	}
 </style>
