@@ -3,11 +3,14 @@
 
 	export let data;
 
+	// TODO: Maybe remove this?
+	// Was intending to use this to allow the user to advance forecasts
+	// For now I've enabled scrolling, that should do
 	let forecastOffset = 0;
 
 	console.log({ data });
 
-	const selectedForecasts = data.data.hourly.slice(forecastOffset, forecastOffset + 30);
+	const selectedForecasts = data.data.hourly.slice(forecastOffset, forecastOffset + 24);
 </script>
 
 <main class="container">
