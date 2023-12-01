@@ -4,14 +4,7 @@
 
 	export let data;
 
-	// TODO: Maybe remove this?
-	// Was intending to use this to allow the user to advance forecasts
-	// For now I've enabled scrolling, that should do
-	let forecastOffset = 0;
-
-	console.log({ data });
-
-	const selectedForecasts = data.data.hourly.slice(forecastOffset, forecastOffset + 24);
+	const selectedForecasts = data.data.hourly.slice(0, 24);
 	const maxTemperature = selectedForecasts.reduce((acc, { temp }) => {
 		if (acc > temp) return temp;
 		return acc;
