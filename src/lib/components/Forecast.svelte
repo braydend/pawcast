@@ -1,18 +1,19 @@
 <script lang="ts">
-	import type { WeatherReport } from '$lib/openWeatherMap/types';
+	import type { Forecast } from '$lib/types';
 	import WeatherCard from './WeatherCard.svelte';
 
-	export let forecast: WeatherReport[];
+	export let forecast: Forecast['hourly'];
 </script>
 
 <section class="forecast">
 	{#each forecast as report}
 		<WeatherCard
-			rainfall={report.rain?.['1h'] ?? 0}
-			temperature={report.temp}
-			time={report.dt}
-			uvIndex={report.uvi}
-			weather={report.weather[0]}
+			rainfall={report.rain ?? 0}
+			temperature={report.temperature}
+			time={report.time}
+			uvIndex={report.uvIndex}
+			description={report.description}
+			icon={report.icon}
 		/>
 	{/each}
 </section>

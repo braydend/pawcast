@@ -1,3 +1,16 @@
+export type ReverseGeolocate = {
+	name: string;
+	local_names: LocalNames;
+	lat: number;
+	lon: number;
+	country: string;
+	state?: string;
+};
+
+type LocalNames = {
+	[location: string]: string;
+};
+
 export type Location = {
 	country: string;
 	lat: number;

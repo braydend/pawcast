@@ -1,7 +1,7 @@
 import { OPEN_WEATHER_MAP_API_KEY } from '$env/static/private';
 import type { Forecast, Location } from './types';
 
-export const forecast = async ({ lat, lon }: Location): Promise<Forecast> => {
+export const forecast = async ({ lat, lon }: Pick<Location, 'lat' | 'lon'>): Promise<Forecast> => {
 	const apiKey = OPEN_WEATHER_MAP_API_KEY;
 	//TODO: allow units selection
 	const unit = 'metric';

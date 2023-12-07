@@ -1,7 +1,7 @@
-import { forecast, geolacate as geolocate } from '$lib/openWeatherMap';
+// import { forecast } from '$lib/openWeatherMap';
 
-export const load = async () => {
-	const data = await forecast(await geolocate('3070'));
+// export const load = async () => {
+// 	const data = await forecast();
 
-	return { data };
-};
+// 	return { data };
+// };
