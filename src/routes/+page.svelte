@@ -6,11 +6,11 @@
 
 	const selectedForecasts = data.data.hourly.slice(0, 24);
 	const maxTemperature = selectedForecasts.reduce((acc, { temp }) => {
-		if (acc > temp) return temp;
+		if (acc < temp) return temp;
 		return acc;
 	}, 0);
 	const maxUvIndex = selectedForecasts.reduce((acc, { uvi }) => {
-		if (acc > uvi) return uvi;
+		if (acc < uvi) return uvi;
 		return acc;
 	}, 0);
 </script>
