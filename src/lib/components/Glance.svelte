@@ -57,6 +57,11 @@
 </section>
 
 <style>
+	@media screen and (max-width: 600px) {
+		section {
+			grid-row-start: 1;
+		}
+	}
 	section {
 		padding: 1rem;
 	}

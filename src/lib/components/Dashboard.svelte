@@ -45,8 +45,18 @@
 <style>
 	.container {
 		display: grid;
-		grid-template-columns: 2fr 1fr;
 		gap: 1rem;
+	}
+	@media screen and (max-width: 600px) {
+		.container {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media screen and (min-width: 600px) {
+		.container {
+			grid-template-columns: 2fr 1fr;
+		}
 	}
 
 	section {
