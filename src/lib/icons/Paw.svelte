@@ -1,5 +1,7 @@
 <script lang="ts">
-	export let colour: 'red' | 'orange' | 'yellow' | 'green';
+	import type { colour } from "$lib/colours";
+
+	export let strokeColour: typeof colour[keyof typeof colour];
 </script>
 
 <svg
@@ -8,7 +10,7 @@
 	height="44"
 	viewBox="0 0 24 24"
 	fill="none"
-	stroke={colour}
+	stroke={strokeColour}
 	stroke-width="1.5"
 	stroke-linecap="round"
 	stroke-linejoin="round"
