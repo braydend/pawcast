@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { colour } from '$lib/colours';
 import * as Card from '$lib/shadcn/ui/card';
 import dayjs from 'dayjs';
 
@@ -11,25 +12,20 @@ import dayjs from 'dayjs';
 
 	const formattedTime = dayjs.unix(time).format('h:mm a D MMM');
 
-	// red-600
-	let borderColour = 'border-[#dc2626]';
+	let borderColour = `border-[${colour.red}]`;
 
 	switch (true) {
 		case temperature < 15:
-			// indigo-600
-			borderColour = 'border-[#4f46e5]';
+			borderColour = `border-[${colour.darkBlue}]`;
 			break;
 		case temperature < 25:
-			// sky-500
-			borderColour = 'border-[#0ea5e9]';
+			borderColour = `border-[${colour.lightBlue}]`;
 			break;
 		case temperature < 30:
-			// orange-500
-			borderColour = 'border-[#f97316]';
+			borderColour = `border-[${colour.orange}]`;
 			break;
 		default:
-			// red-600
-			borderColour = 'border-[#dc2626]';
+			borderColour = `border-[${colour.red}]`;
 			break;
 	}
 </script>
