@@ -25,5 +25,6 @@
 		overflow-x: scroll;
 		gap: 1rem;
 		padding: 1rem;
+		align-items: center;
 	}
 </style>

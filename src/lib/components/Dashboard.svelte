@@ -4,7 +4,6 @@
 	import LocationPicker from '$lib/components/LocationPicker.svelte';
 	import { getCoordinates, setCoordinates } from '$lib/coordinatesUrlStore';
 	import Paw from '$lib/icons/Paw.svelte';
-	import { floorToDecimalPlaces } from '$lib/math';
 	import { forecastStore } from '$lib/stores/forecast';
 	import type { Coordinates, Forecast as ForecastType } from '$lib/types';
 	import { onMount } from 'svelte';
@@ -27,26 +26,17 @@
 		locationName = d?.locationName ?? PLACEHOLDER_LOCATION_NAME;
 	});
 
-	const maxTemperature = selectedForecasts.reduce((acc, { temperature }) => {
+	$: maxTemperature = selectedForecasts.reduce((acc, { temperature }) => {
 		if (acc < temperature) return temperature;
 		return acc;
 	}, 0);
-	const maxUvIndex = selectedForecasts.reduce((acc, { uvIndex }) => {
+	$: maxUvIndex = selectedForecasts.reduce((acc, { uvIndex }) => {
 		if (acc < uvIndex) return uvIndex;
 		return acc;
 	}, 0);
 
 	const handleLocationChange = async (location: Coordinates) => {
-		let currentCoordinates = getCoordinates();
-
-		const isLocationChanged =
-			!currentCoordinates ||
-			floorToDecimalPlaces(currentCoordinates.lat, 3) !== floorToDecimalPlaces(location.lat, 3) ||
-			floorToDecimalPlaces(currentCoordinates.long, 3) !== floorToDecimalPlaces(location.long, 3);
-
-		if (isLocationChanged) {
-			await updateForecast(location);
-		}
+		await updateForecast(location);
 	};
 
 	const updateForecast = async (location: Coordinates) => {

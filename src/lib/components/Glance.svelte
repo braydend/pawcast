@@ -10,7 +10,7 @@
 	let dogRating: SafetyRating = 'safe';
 	let uvRating: SafetyRating = 'safe';
 
-	switch (true) {
+	$: switch (true) {
 		case maxTemperature < 20:
 			dogRating = 'safe';
 			break;
@@ -25,7 +25,7 @@
 			break;
 	}
 
-	switch (true) {
+	$: switch (true) {
 		case maxUvIndex < 2:
 			uvRating = 'safe';
 			break;
@@ -49,10 +49,12 @@
 	<div>
 		<h2>Dog safety (temperature):</h2>
 		<Paw colour={ratingColour(dogRating)} />
+		<p>Max {Math.round(maxTemperature)}&deg;C</p>
 	</div>
 	<div>
 		<h2>Human safety (UV):</h2>
 		<Sun colour={ratingColour(uvRating)} />
+		<p>Max UV index {Math.round(maxUvIndex)}</p>
 	</div>
 </section>
 
