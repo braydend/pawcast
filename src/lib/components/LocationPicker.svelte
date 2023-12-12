@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Locate from '$lib/icons/Locate.svelte';
+	import Button from '$lib/shadcn/ui/button/button.svelte';
+	import Input from '$lib/shadcn/ui/input/input.svelte';
 
 	export let onLocationChange: (newLocation: { lat: number; long: number }) => void;
 	export let locationName: string;
@@ -16,15 +18,9 @@
 	};
 </script>
 
-<div class="container">
-	<button on:click={handleLocate}>
+<form class="flex w-full max-w-sm items-center space-x-2 col-start-1 col-end-3">	
+	<Button on:click={handleLocate}>
 		<Locate />
-	</button>
-	<span>{locationName}</span>
-</div>
-
-<style>
-	.container {
-		grid-column: 1 / span 2;
-	}
-</style>
+	</Button>
+	<Input type="text" placeholder="Select a location" bind:value={locationName} disabled />
+</form>
