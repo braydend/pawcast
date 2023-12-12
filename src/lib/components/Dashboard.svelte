@@ -2,7 +2,7 @@
 	import Forecast from '$lib/components/Forecast.svelte';
 	import Glance from '$lib/components/Glance.svelte';
 	import LocationPicker from '$lib/components/LocationPicker.svelte';
-	import { getCoordinates, setCoordinates } from '$lib/coordinatesLocalStore';
+	import { getCoordinates, setCoordinates } from '$lib/coordinatesUrlStore';
 	import Paw from '$lib/icons/Paw.svelte';
 	import { floorToDecimalPlaces } from '$lib/math';
 	import { forecastStore } from '$lib/stores/forecast';
@@ -54,6 +54,7 @@
 			d.json()
 		);
 
+		setCoordinates(location);
 		forecastStore.set(await forecastPromise);
 	};
 </script>
