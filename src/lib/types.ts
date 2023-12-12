@@ -11,3 +11,5 @@ type HourlyForecast = {
 	description: string;
 	rain?: number;
 };
+
+export type Coordinates = { lat: number; long: number };

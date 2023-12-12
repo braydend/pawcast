@@ -2,13 +2,25 @@
 	import Forecast from '$lib/components/Forecast.svelte';
 	import Glance from '$lib/components/Glance.svelte';
 	import LocationPicker from '$lib/components/LocationPicker.svelte';
+	import { getCoordinates, setCoordinates } from '$lib/coordinatesLocalStore';
+	import Paw from '$lib/icons/Paw.svelte';
+	import { floorToDecimalPlaces } from '$lib/math';
 	import { forecastStore } from '$lib/stores/forecast';
-	import type { Forecast as ForecastType } from '$lib/types';
+	import type { Coordinates, Forecast as ForecastType } from '$lib/types';
+	import { onMount } from 'svelte';
 
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
 	let selectedForecasts: ForecastType['hourly'] = [];
 	let locationName: string = PLACEHOLDER_LOCATION_NAME;
+	let forecastPromise: Promise<ForecastType>;
+
+	onMount(async () => {
+		let coordinates = getCoordinates();
+		if (!coordinates) return;
+
+		await updateForecast(coordinates);
+	});
 
 	forecastStore.subscribe((d) => {
 		selectedForecasts = d?.hourly.slice(0, 24) ?? [];
@@ -24,22 +36,50 @@
 		return acc;
 	}, 0);
 
-	const handleLocationChange = async (location: { lat: number; long: number }) => {
-		const updatedForecast = await fetch(
-			`/api/forecast?lat=${location.lat}&long=${location.long}`
-		).then((d) => d.json());
+	const handleLocationChange = async (location: Coordinates) => {
+		let currentCoordinates = getCoordinates();
 
-		forecastStore.set(updatedForecast);
+		console.log({
+			cur: {
+				lat: floorToDecimalPlaces(currentCoordinates!.lat, 3),
+				long: floorToDecimalPlaces(currentCoordinates!.long, 3)
+			},
+			new: {
+				lat: floorToDecimalPlaces(location.lat, 3),
+				long: floorToDecimalPlaces(location.long, 3)
+			}
+		});
+
+		const isLocationChanged =
+			!currentCoordinates ||
+			floorToDecimalPlaces(currentCoordinates.lat, 3) !== floorToDecimalPlaces(location.lat, 3) ||
+			floorToDecimalPlaces(currentCoordinates.long, 3) !== floorToDecimalPlaces(location.long, 3);
+
+		if (isLocationChanged) {
+			await updateForecast(location);
+		}
+	};
+
+	const updateForecast = async (location: Coordinates) => {
+		forecastPromise = fetch(`/api/forecast?lat=${location.lat}&long=${location.long}`).then((d) =>
+			d.json()
+		);
+
+		forecastStore.set(await forecastPromise);
 	};
 </script>
 
 <main class="container">
 	<LocationPicker onLocationChange={handleLocationChange} {locationName} />
-	{#if $forecastStore}
-		<Forecast forecast={selectedForecasts} />
-		<Glance {maxTemperature} {maxUvIndex} />
-		<section class="recommendations">Recommendations</section>
-	{/if}
+	{#await forecastPromise}
+		<div class="spinner"><Paw colour="green" /></div>
+	{:then _}
+		{#if $forecastStore}
+			<Forecast forecast={selectedForecasts} />
+			<Glance {maxTemperature} {maxUvIndex} />
+			<section class="recommendations">Recommendations</section>
+		{/if}
+	{/await}
 </main>
 
 <style>
@@ -65,5 +105,20 @@
 
 	.recommendations {
 		grid-column: 1 / span 2;
+	}
+
+	.spinner {
+		animation: 1s ease-in-out infinite rotate;
+		width: min-content;
+		height: min-content;
+	}
+
+	@keyframes rotate {
+		0% {
+			transform: rotate(0);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 </style>
