@@ -12,20 +12,29 @@ import dayjs from 'dayjs';
 
 	const formattedTime = dayjs.unix(time).format('h:mm a D MMM');
 
-	let borderColour = `border-[${colour.red}]`;
+	//TODO: Cannot dynamically assemble classnames, so this is the current workaround
+	// These colours reference the values in the colours.ts file
+	const borderColours = {
+		red: "border-[#dc2626]",
+		darkBlue : "border-[#4f46e5]",
+		lightBlue: "border-[#0ea5e9]",
+		orange: "border-[#f97316]",
+	}
+
+	let borderColour = borderColours.red;
 
 	switch (true) {
 		case temperature < 15:
-			borderColour = `border-[${colour.darkBlue}]`;
+			borderColour = borderColours.darkBlue;
 			break;
 		case temperature < 25:
-			borderColour = `border-[${colour.lightBlue}]`;
+			borderColour = borderColours.lightBlue;
 			break;
 		case temperature < 30:
-			borderColour = `border-[${colour.orange}]`;
+			borderColour = borderColours.orange;
 			break;
 		default:
-			borderColour = `border-[${colour.red}]`;
+			borderColour = borderColours.red;
 			break;
 	}
 </script>
