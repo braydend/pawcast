@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { colour } from '$lib/colours';
 	import Forecast from '$lib/components/Forecast.svelte';
 	import Glance from '$lib/components/Glance.svelte';
 	import LocationPicker from '$lib/components/LocationPicker.svelte';
@@ -52,7 +53,7 @@
 <main class="container">
 	<LocationPicker onLocationChange={handleLocationChange} {locationName} />
 	{#await forecastPromise}
-		<div class="spinner"><Paw colour="green" /></div>
+		<div class="spinner"><Paw strokeColour={colour.lightBlue} /></div>
 	{:then _}
 		{#if $forecastStore}
 			<Forecast forecast={selectedForecasts} />

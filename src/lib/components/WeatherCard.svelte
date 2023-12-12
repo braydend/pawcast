@@ -1,5 +1,7 @@
 <script lang="ts">
-	import dayjs from 'dayjs';
+	import { colour } from '$lib/colours';
+import * as Card from '$lib/shadcn/ui/card';
+import dayjs from 'dayjs';
 
 	export let temperature: number;
 	export let uvIndex: number;
@@ -10,48 +12,37 @@
 
 	const formattedTime = dayjs.unix(time).format('h:mm a D MMM');
 
-	let colour = 'red';
+	let borderColour = `border-[${colour.red}]`;
 
 	switch (true) {
 		case temperature < 15:
-			colour = 'darkblue';
+			borderColour = `border-[${colour.darkBlue}]`;
 			break;
 		case temperature < 25:
-			colour = 'lightblue';
+			borderColour = `border-[${colour.lightBlue}]`;
 			break;
 		case temperature < 30:
-			colour = 'orange';
+			borderColour = `border-[${colour.orange}]`;
 			break;
 		default:
-			colour = 'red';
+			borderColour = `border-[${colour.red}]`;
 			break;
 	}
 </script>
 
-<div class="container" style={`--colour: ${colour}`}>
-	<p class="time">{formattedTime}</p>
-	<img src={`https://openweathermap.org/img/wn/${icon}.png`} alt={description} />
-	<p>{temperature}&deg;C</p>
-	<p>UV: {uvIndex}</p>
-	<p>Rain: {rainfall}mm</p>
-</div>
+<Card.Root class={borderColour}>
+	<Card.Header>
+		<Card.Title class="whitespace-nowrap">{formattedTime}</Card.Title>
+	</Card.Header>
+	<Card.Content class="flex flex-col items-center">
+		<img src={`https://openweathermap.org/img/wn/${icon}.png`} alt={description} />
+		<p>{temperature}&deg;C</p>
+		<p>UV: {uvIndex}</p>
+		<p>Rain: {rainfall}mm</p>
+	</Card.Content>
+</Card.Root>
 
 <style>
-	.container {
-		border: 3px solid;
-		border-radius: 3px;
-		padding: 0.5rem;
-		border-color: var(--colour);
-		align-items: center;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.time {
-		white-space: nowrap;
-		padding-bottom: 0.5rem;
-	}
-
 	p {
 		margin: 0;
 	}

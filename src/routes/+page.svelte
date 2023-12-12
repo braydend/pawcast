@@ -2,4 +2,6 @@
 	import Dashboard from '$lib/components/Dashboard.svelte';
 </script>
 
-<Dashboard />
+<div class="p-4">
+	<Dashboard />
+</div>

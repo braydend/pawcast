@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { colour } from '$lib/colours';
 	import Paw from '$lib/icons/Paw.svelte';
 	import Sun from '$lib/icons/Sun.svelte';
+	import * as Card from '$lib/shadcn/ui/card';
 
 	export let maxTemperature: number;
 	export let maxUvIndex: number;
@@ -38,43 +40,26 @@
 	}
 
 	const ratingColour = (rating: SafetyRating) => {
-		if (rating === 'safe') return 'green';
-		if (rating === 'warning') return 'yellow';
-		if (rating === 'danger') return 'orange';
-		return 'red';
+		if (rating === 'safe') return colour.green;
+		if (rating === 'warning') return colour.yellow;
+		if (rating === 'danger') return colour.orange;
+		return colour.red;
 	};
 </script>
 
-<section>
-	<div>
-		<h2>Dog safety (temperature):</h2>
-		<Paw colour={ratingColour(dogRating)} />
+<Card.Root class="flex flex-col items-center row-start-1 md:row-start-auto">
+	<Card.Header>
+		<Card.Title>Dog safety (temperature):</Card.Title>
+	</Card.Header>
+	<Card.Content class="flex flex-col items-center">
+		<Paw strokeColour={ratingColour(dogRating)} />
 		<p>Max {Math.round(maxTemperature)}&deg;C</p>
-	</div>
-	<div>
-		<h2>Human safety (UV):</h2>
-		<Sun colour={ratingColour(uvRating)} />
+	</Card.Content>
+	<Card.Header>
+		<Card.Title>Human safety (UV):</Card.Title>
+	</Card.Header>
+	<Card.Content class="flex flex-col items-center">
+		<Sun strokeColour={ratingColour(uvRating)} />
 		<p>Max UV index {Math.round(maxUvIndex)}</p>
-	</div>
-</section>
-
-<style>
-	@media screen and (max-width: 600px) {
-		section {
-			grid-row-start: 1;
-		}
-	}
-	section {
-		padding: 1rem;
-	}
-
-	h2 {
-		margin: 0;
-	}
-
-	div {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-</style>
+	</Card.Content>
+</Card.Root>
