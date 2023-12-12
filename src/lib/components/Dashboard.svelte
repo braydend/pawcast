@@ -39,17 +39,6 @@
 	const handleLocationChange = async (location: Coordinates) => {
 		let currentCoordinates = getCoordinates();
 
-		console.log({
-			cur: {
-				lat: floorToDecimalPlaces(currentCoordinates!.lat, 3),
-				long: floorToDecimalPlaces(currentCoordinates!.long, 3)
-			},
-			new: {
-				lat: floorToDecimalPlaces(location.lat, 3),
-				long: floorToDecimalPlaces(location.long, 3)
-			}
-		});
-
 		const isLocationChanged =
 			!currentCoordinates ||
 			floorToDecimalPlaces(currentCoordinates.lat, 3) !== floorToDecimalPlaces(location.lat, 3) ||
