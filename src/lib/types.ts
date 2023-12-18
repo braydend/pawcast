@@ -13,3 +13,5 @@ export type ForecastRecord = {
 };
 
 export type Coordinates = { lat: number; long: number };
+
+export type Grade = 'safe' | 'warning' | 'danger' | 'extreme';
