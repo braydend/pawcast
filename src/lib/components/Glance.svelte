@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { colour } from '$lib/colours';
+	import { getColourForGrade } from '$lib/colours';
+	import { temperatureLimits } from '$lib/domain/dogSafety';
 	import Paw from '$lib/icons/Paw.svelte';
 	import Sun from '$lib/icons/Sun.svelte';
 	import * as Card from '$lib/shadcn/ui/card';
@@ -13,13 +14,13 @@
 	let uvRating: SafetyRating = 'safe';
 
 	$: switch (true) {
-		case maxTemperature < 20:
+		case maxTemperature < temperatureLimits.safe:
 			dogRating = 'safe';
 			break;
-		case maxTemperature < 25:
+		case maxTemperature < temperatureLimits.warning:
 			dogRating = 'warning';
 			break;
-		case maxTemperature < 30:
+		case maxTemperature < temperatureLimits.danger:
 			dogRating = 'danger';
 			break;
 		default:
@@ -38,13 +39,6 @@
 			uvRating = 'extreme';
 			break;
 	}
-
-	const ratingColour = (rating: SafetyRating) => {
-		if (rating === 'safe') return colour.green;
-		if (rating === 'warning') return colour.yellow;
-		if (rating === 'danger') return colour.orange;
-		return colour.red;
-	};
 </script>
 
 <Card.Root class="flex flex-col items-center row-start-1 md:row-start-auto">
@@ -52,14 +46,14 @@
 		<Card.Title>Dog safety (temperature):</Card.Title>
 	</Card.Header>
 	<Card.Content class="flex flex-col items-center">
-		<Paw strokeColour={ratingColour(dogRating)} />
+		<Paw strokeColour={getColourForGrade(dogRating)} />
 		<p>Max {Math.round(maxTemperature)}&deg;C</p>
 	</Card.Content>
 	<Card.Header>
 		<Card.Title>Human safety (UV):</Card.Title>
 	</Card.Header>
 	<Card.Content class="flex flex-col items-center">
-		<Sun strokeColour={ratingColour(uvRating)} />
+		<Sun strokeColour={getColourForGrade(uvRating)} />
 		<p>Max UV index {Math.round(maxUvIndex)}</p>
 	</Card.Content>
 </Card.Root>

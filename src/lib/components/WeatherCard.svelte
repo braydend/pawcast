@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { colour } from '$lib/colours';
-import * as Card from '$lib/shadcn/ui/card';
-import dayjs from 'dayjs';
+	import { temperatureLimits } from '$lib/domain/dogSafety';
+	import * as Card from '$lib/shadcn/ui/card';
+	import dayjs from 'dayjs';
 
 	export let temperature: number;
 	export let uvIndex: number;
@@ -24,13 +24,13 @@ import dayjs from 'dayjs';
 	let borderColour = borderColours.red;
 
 	switch (true) {
-		case temperature < 15:
+		case temperature < temperatureLimits.safe:
 			borderColour = borderColours.darkBlue;
 			break;
-		case temperature < 25:
+		case temperature < temperatureLimits.warning:
 			borderColour = borderColours.lightBlue;
 			break;
-		case temperature < 30:
+		case temperature < temperatureLimits.danger:
 			borderColour = borderColours.orange;
 			break;
 		default:

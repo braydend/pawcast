@@ -1,3 +1,5 @@
+import type { Grade } from './types';
+
 export const colour = {
 	// indigo-600
 	darkBlue: '#4f46e5',
@@ -17,3 +19,10 @@ export const colour = {
 	// yellow-300
 	yellow: '#fde047'
 } as const;
+
+export const getColourForGrade = (rating: Grade) => {
+	if (rating === 'safe') return colour.green;
+	if (rating === 'warning') return colour.yellow;
+	if (rating === 'danger') return colour.orange;
+	return colour.red;
+};
