@@ -1,9 +1,9 @@
 export type Forecast = {
 	locationName: string;
-	hourly: HourlyForecast[];
+	hourly: ForecastRecord[];
 };
 
-type HourlyForecast = {
+export type ForecastRecord = {
 	uvIndex: number;
 	temperature: number;
 	time: number;
