@@ -1,9 +1,9 @@
 export type Forecast = {
 	locationName: string;
-	hourly: HourlyForecast[];
+	hourly: ForecastRecord[];
 };
 
-type HourlyForecast = {
+export type ForecastRecord = {
 	uvIndex: number;
 	temperature: number;
 	time: number;
@@ -13,3 +13,5 @@ type HourlyForecast = {
 };
 
 export type Coordinates = { lat: number; long: number };
+
+export type Grade = 'safe' | 'warning' | 'danger' | 'extreme';

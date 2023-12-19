@@ -6,12 +6,13 @@
 	import { getCoordinates, setCoordinates } from '$lib/coordinatesUrlStore';
 	import Paw from '$lib/icons/Paw.svelte';
 	import { forecastStore } from '$lib/stores/forecast';
-	import type { Coordinates, Forecast as ForecastType } from '$lib/types';
+	import type { Coordinates, ForecastRecord, Forecast as ForecastType } from '$lib/types';
 	import { onMount } from 'svelte';
+	import Recommendations from './Recommendations.svelte';
 
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
-	let selectedForecasts: ForecastType['hourly'] = [];
+	let selectedForecasts: ForecastRecord[] = [];
 	let locationName: string = PLACEHOLDER_LOCATION_NAME;
 	let forecastPromise: Promise<ForecastType>;
 
@@ -58,7 +59,7 @@
 		{#if $forecastStore}
 			<Forecast forecast={selectedForecasts} />
 			<Glance {maxTemperature} {maxUvIndex} />
-			<section class="recommendations">Recommendations</section>
+			<Recommendations forecasts={selectedForecasts} />
 		{/if}
 	{/await}
 </main>
