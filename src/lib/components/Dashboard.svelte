@@ -51,17 +51,20 @@
 	};
 </script>
 
-<main class="container">
-	<LocationPicker onLocationChange={handleLocationChange} {locationName} />
-	{#await forecastPromise}
-		<div class="spinner"><Paw strokeColour={colour.lightBlue} /></div>
-	{:then _}
-		{#if $forecastStore}
-			<Forecast forecast={selectedForecasts} />
-			<Glance {maxTemperature} {maxUvIndex} />
-			<Recommendations forecasts={selectedForecasts} />
-		{/if}
-	{/await}
+<main class="flex flex-col gap-4">
+	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">Pawcast</h1>
+	<div class="container">
+		<LocationPicker onLocationChange={handleLocationChange} {locationName} />
+		{#await forecastPromise}
+			<div class="spinner"><Paw strokeColour={colour.lightBlue} /></div>
+		{:then _}
+			{#if $forecastStore}
+				<Forecast forecast={selectedForecasts} />
+				<Glance {maxTemperature} {maxUvIndex} />
+				<Recommendations forecasts={selectedForecasts} />
+			{/if}
+		{/await}
+	</div>
 </main>
 
 <style>
@@ -79,14 +82,6 @@
 		.container {
 			grid-template-columns: 2fr 1fr;
 		}
-	}
-
-	section {
-		border: 1px solid black;
-	}
-
-	.recommendations {
-		grid-column: 1 / span 2;
 	}
 
 	.spinner {
