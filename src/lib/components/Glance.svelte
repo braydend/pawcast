@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { getColourForGrade } from '$lib/colours';
-	import { temperatureLimits } from '$lib/domain/dogSafety';
+	import { temperatureLimits } from '$lib/domain/recommendation/dogSafety';
+	import { uvIndexLimits } from '$lib/domain/recommendation/humanSafety';
 	import Paw from '$lib/icons/Paw.svelte';
 	import Sun from '$lib/icons/Sun.svelte';
 	import * as Card from '$lib/shadcn/ui/card';
+	import type { Grade } from '$lib/types';
 
 	export let maxTemperature: number;
 	export let maxUvIndex: number;
 
-	type SafetyRating = 'safe' | 'warning' | 'danger' | 'extreme';
-
-	let dogRating: SafetyRating = 'safe';
-	let uvRating: SafetyRating = 'safe';
+	let dogRating: Grade = 'safe';
+	let uvRating: Grade = 'safe';
 
 	$: switch (true) {
 		case maxTemperature < temperatureLimits.safe:
@@ -29,10 +29,13 @@
 	}
 
 	$: switch (true) {
-		case maxUvIndex < 2:
+		case maxUvIndex < uvIndexLimits.safe:
 			uvRating = 'safe';
 			break;
-		case maxUvIndex < 8:
+		case maxUvIndex < uvIndexLimits.warning:
+			uvRating = 'warning';
+			break;
+		case maxUvIndex < uvIndexLimits.danger:
 			uvRating = 'danger';
 			break;
 		default:

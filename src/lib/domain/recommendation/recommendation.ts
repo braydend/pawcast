@@ -1,5 +1,6 @@
 import type { Grade } from '$lib/types';
 import { airTemperatureMessages, groundTemperatureMessages } from './dogSafety';
+import { uvIndexMessages } from './humanSafety';
 
 export const getTemperatureRecommendations = (grade: Grade) => {
 	return [airTemperatureMessages[grade], groundTemperatureMessages[grade]].filter((msg) =>
@@ -11,23 +12,23 @@ export const getRecommendationMessages = (
 	grade: Grade,
 	type: 'UV' | 'ground-temperature' | 'air-temperature' | 'all'
 ) => {
-	let messages: (string | undefined)[];
+	let messages: string[];
 
 	switch (type) {
 		case 'UV':
-			messages = []; // TODO: Build out UV recommendations
+			messages = uvIndexMessages[grade];
 			break;
 		case 'air-temperature':
-			messages = [airTemperatureMessages[grade]];
+			messages = airTemperatureMessages[grade];
 			break;
 		case 'ground-temperature':
-			messages = [groundTemperatureMessages[grade]];
+			messages = groundTemperatureMessages[grade];
 			break;
 		case 'all':
 		default:
-			messages = [groundTemperatureMessages[grade], airTemperatureMessages[grade]];
+			messages = [...groundTemperatureMessages[grade], ...airTemperatureMessages[grade]];
 			break;
 	}
 
-	return messages.filter((msg) => Boolean(msg));
+	return messages;
 };

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { temperatureLimits } from '$lib/domain/dogSafety';
+	import { temperatureLimits } from '$lib/domain/recommendation/dogSafety';
 	import * as Card from '$lib/shadcn/ui/card';
 	import dayjs from 'dayjs';
 
