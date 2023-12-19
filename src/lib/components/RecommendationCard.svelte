@@ -27,8 +27,8 @@
 
     const getTitle = (rec: Recommendation) => {
         if (rec.type === "UV") return "UV Index Warning"
-        if (rec.type === "air-temperature") return "Temperature Warning"
-        if (rec.type === "ground-temperature") return "Ground Temperature Warning"
+        if (rec.type === "air-temperature") return "Temperature Warning for Dogs"
+        if (rec.type === "ground-temperature") return "Ground Temperature Warning for Dogs"
     }
 </script>
 
