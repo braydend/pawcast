@@ -14,7 +14,11 @@ export const airTemperatureMessages: RecommendationMessages = {
 		'Exercise lightly, water often.',
 		'Can be life threatening for young puppies and large dogs.'
 	],
-	extreme: ['Extremely high risk of heat stroke for all dogs.', 'Maybe swim instead']
+	extreme: [
+		'Extremely high risk of heat stroke for all dogs.',
+		'Keep your dog well hydrated.',
+		'Allowing your dog is recommended'
+	]
 };
 
 const DEFAULT_GROUND_TEMP_MESSAGE =
