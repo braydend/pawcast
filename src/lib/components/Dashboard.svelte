@@ -9,6 +9,7 @@
 	import type { Coordinates, ForecastRecord, Forecast as ForecastType } from '$lib/types';
 	import { onMount } from 'svelte';
 	import Recommendations from './Recommendations.svelte';
+	import Chart from './Chart.svelte';
 
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
@@ -59,6 +60,13 @@
 			<div class="spinner"><Paw strokeColour={colour.lightBlue} /></div>
 		{:then _}
 			{#if $forecastStore}
+				<Chart
+					rawData={selectedForecasts.map(({ temperature, time, uvIndex }) => ({
+						temperature,
+						time,
+						uvIndex
+					}))}
+				/>
 				<Forecast forecast={selectedForecasts} />
 				<Glance {maxTemperature} {maxUvIndex} />
 				<Recommendations forecasts={selectedForecasts} />
