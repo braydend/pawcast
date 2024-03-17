@@ -6,7 +6,10 @@
 	type DataType = { temperature: number; time: number; uvIndex: number };
 
 	export let rawData: DataType[];
-	const data = rawData.map(({ time, ...rest }) => ({ time: dayjs.unix(time), ...rest }));
+	const data = rawData.map(({ time, ...rest }) => ({
+		time: dayjs.unix(time).startOf('hour'),
+		...rest
+	}));
 	const tooHotData = data.filter(({ temperature }) => temperature >= 22);
 	const notTooHotData = data.filter(({ temperature }) => temperature <= 22);
 
@@ -46,6 +49,16 @@
 			.attr('d', line('time', 'temperature'));
 	};
 
+	const addUVLine = (svg: unknown) => {
+		svg
+			.append('path')
+			.datum(data)
+			.attr('fill', 'none')
+			.attr('stroke', 'green')
+			.attr('stroke-width', 8)
+			.attr('d', line('time', 'uvIndex'));
+	};
+
 	function drawChart() {
 		const svg = d3
 			.select<HTMLDivElement, DataType>('#chart')
@@ -67,46 +80,9 @@
 			.attr('dy', '.15em')
 			.attr('transform', 'rotate(-65)');
 
-		// svg
-		// 	.append('path')
-		// 	.datum(notTooHotData)
-		// 	.attr('fill', 'none')
-		// 	.attr('stroke', 'steelblue')
-		// 	.attr('stroke-width', 8)
-		// 	.attr('d', line('time', 'temperature'));
-
-		// svg
-		// 	.append('path')
-		// 	.datum(tooHotData)
-		// 	.attr('fill', 'none')
-		// 	.attr('stroke', 'red')
-		// 	.attr('stroke-width', 8)
-		// 	.attr('d', line('time', 'temperature'));
-
 		addTemperatureLine(svg);
-
-		svg
-			.append('path')
-			.datum(data)
-			.attr('fill', 'none')
-			.attr('stroke', 'green')
-			.attr('stroke-width', 8)
-			.attr('d', line('time', 'uvIndex'));
-
-		svg
-			.selectAll('.text')
-			.data(data)
-			.enter()
-			.append('text')
-			.attr('class', 'label')
-			.attr('x', (d) => xScale(d.time)) // Adjust x position based on your time scale
-			.attr('y', (d) => yScale(d.temperature)) // Adjust y position based on your temperature scale
-			.attr('dy', '-0.75em') // Offset above the data point
-			.attr('dx', '0.5em') // Offset from the data point
-			.attr('text-anchor', 'start') // Adjust text alignment
-			.text((d) => `${d.temperature}°C`); // Set the label text to temperature
+		addUVLine(svg);
 	}
 </script>
 
 <div id="chart"></div>
-s s s s as s s a s s s
