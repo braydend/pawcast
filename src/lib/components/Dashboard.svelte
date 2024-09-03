@@ -9,6 +9,7 @@
 	import type { Coordinates, ForecastRecord, Forecast as ForecastType } from '$lib/types';
 	import { onMount } from 'svelte';
 	import Recommendations from './Recommendations.svelte';
+	import ForecastChart from './ForecastChart.svelte';
 
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
@@ -61,6 +62,7 @@
 			{#if $forecastStore}
 				<Forecast forecast={selectedForecasts} />
 				<Glance {maxTemperature} {maxUvIndex} />
+				<ForecastChart forecast={selectedForecasts} />
 				<Recommendations forecasts={selectedForecasts} />
 			{/if}
 		{/await}

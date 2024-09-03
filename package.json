@@ -39,11 +39,12 @@
   "type": "module",
   "dependencies": {
     "@sentry/cli": "2.22.2",
-		"@sentry/sveltekit": "^7.84.0",
+    "@sentry/sveltekit": "^7.84.0",
     "@vercel/analytics": "^1.1.1",
     "@vercel/kv": "^1.0.0",
     "@vercel/speed-insights": "^1.0.2",
     "bits-ui": "^0.11.7",
+    "chart.js": "^4.4.4",
     "clsx": "^2.0.0",
     "dayjs": "^1.11.10",
     "lucide-svelte": "^0.294.0",
@@ -52,10 +53,10 @@
     "tailwind-variants": "^0.1.18"
   },
   "overrides": {
-		"@sentry/cli": "2.22.2"
-	},
-	"optionalDependencies": {
-		"@sentry/cli-darwin": "2.22.2",
-		"@sentry/cli-linux-x64": "2.22.2"
-	}
+    "@sentry/cli": "2.22.2"
+  },
+  "optionalDependencies": {
+    "@sentry/cli-darwin": "2.22.2",
+    "@sentry/cli-linux-x64": "2.22.2"
+  }
 }
