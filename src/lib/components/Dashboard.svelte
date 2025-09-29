@@ -9,6 +9,7 @@
 	import type { Coordinates, ForecastRecord, Forecast as ForecastType } from '$lib/types';
 	import { onMount } from 'svelte';
 	import Recommendations from './Recommendations.svelte';
+	import { getForecast } from '$lib/client/getForecast';
 
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
@@ -42,9 +43,7 @@
 	};
 
 	const updateForecast = async (location: Coordinates) => {
-		forecastPromise = fetch(`/api/forecast?lat=${location.lat}&long=${location.long}`).then((d) =>
-			d.json()
-		);
+		forecastPromise = getForecast(location.lat, location.long);
 
 		setCoordinates(location);
 		forecastStore.set(await forecastPromise);

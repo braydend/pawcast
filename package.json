@@ -44,6 +44,7 @@
     "@vercel/speed-insights": "^1.0.2",
     "bits-ui": "^0.11.7",
     "clsx": "^2.0.0",
+    "d3": "^7.9.0",
     "dayjs": "^1.11.10",
     "lucide-svelte": "^0.294.0",
     "mode-watcher": "^0.1.2",
