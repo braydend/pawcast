@@ -3,8 +3,12 @@
 	import Button from '$lib/shadcn/ui/button/button.svelte';
 	import Input from '$lib/shadcn/ui/input/input.svelte';
 
-	export let onLocationChange: (newLocation: { lat: number; long: number }) => void;
-	export let locationName: string;
+	interface Props {
+		onLocationChange: (newLocation: { lat: number; long: number }) => void;
+		locationName: string;
+	}
+
+	let { onLocationChange, locationName = $bindable() }: Props = $props();
 
 	const handleLocate = () => {
 		navigator.geolocation.getCurrentPosition(

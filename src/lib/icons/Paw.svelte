@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { colour } from "$lib/colours";
 
-	export let strokeColour: typeof colour[keyof typeof colour];
+	interface Props {
+		strokeColour: typeof colour[keyof typeof colour];
+	}
+
+	let { strokeColour }: Props = $props();
 </script>
 
 <svg
