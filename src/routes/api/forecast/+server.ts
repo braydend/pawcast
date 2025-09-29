@@ -6,7 +6,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const long = parseFloat(url.searchParams.get('long') ?? '');
 
 	if (!lat || !long) {
-		throw error(500, 'Missing latitude or longitude');
+		error(500, 'Missing latitude or longitude');
 	}
 
 	const result = await forecast(lat, long);
