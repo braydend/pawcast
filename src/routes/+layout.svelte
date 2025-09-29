@@ -2,6 +2,11 @@
 	import { dev } from '$app/environment';
 	import '../app.pcss';
 	import { ModeWatcher } from 'mode-watcher';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 </script>
 
 <svelte:head>
@@ -11,4 +16,4 @@
 </svelte:head>
 
 <ModeWatcher />
-<slot></slot>
+{@render children?.()}

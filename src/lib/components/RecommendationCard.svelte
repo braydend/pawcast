@@ -9,7 +9,11 @@
 	import type { Grade } from "$lib/types";
 	import dayjs from "dayjs";
 
-    export let recommendation: Recommendation;
+    interface Props {
+        recommendation: Recommendation;
+    }
+
+    let { recommendation }: Props = $props();
 
     // TODO: Cannot dynamically assemble classnames, so this is the current workaround
 	// These colours reference the values in the colours.ts file

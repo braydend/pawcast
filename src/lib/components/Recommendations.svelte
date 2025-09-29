@@ -5,7 +5,11 @@
 	import type { ForecastRecord } from "$lib/types";
 	import RecommendationCard from "./RecommendationCard.svelte";
 
-    export let forecasts: ForecastRecord[];
+    interface Props {
+        forecasts: ForecastRecord[];
+    }
+
+    let { forecasts }: Props = $props();
 
     const RECOMMENDATION_GRADES_TO_INCLUDE = ["warning","danger","extreme"];
 

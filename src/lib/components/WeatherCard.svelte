@@ -3,12 +3,23 @@
 	import * as Card from '$lib/shadcn/ui/card';
 	import dayjs from 'dayjs';
 
-	export let temperature: number;
-	export let uvIndex: number;
-	export let time: number;
-	export let rainfall: number;
-	export let description: string;
-	export let icon: string;
+	interface Props {
+		temperature: number;
+		uvIndex: number;
+		time: number;
+		rainfall: number;
+		description: string;
+		icon: string;
+	}
+
+	let {
+		temperature,
+		uvIndex,
+		time,
+		rainfall,
+		description,
+		icon
+	}: Props = $props();
 
 	const formattedTime = dayjs.unix(time).format('h:mm a D MMM');
 
@@ -21,7 +32,7 @@
 		orange: "border-[#f97316]",
 	}
 
-	let borderColour = borderColours.red;
+	let borderColour = $state(borderColours.red);
 
 	switch (true) {
 		case temperature < temperatureLimits.safe:

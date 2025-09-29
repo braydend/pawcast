@@ -2,7 +2,11 @@
 	import type { Forecast } from '$lib/types';
 	import WeatherCard from './WeatherCard.svelte';
 
-	export let forecast: Forecast['hourly'];
+	interface Props {
+		forecast: Forecast['hourly'];
+	}
+
+	let { forecast }: Props = $props();
 </script>
 
 <section class="overflow-x-hidden">

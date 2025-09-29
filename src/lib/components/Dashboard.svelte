@@ -12,9 +12,9 @@
 
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
-	let selectedForecasts: ForecastRecord[] = [];
-	let locationName: string = PLACEHOLDER_LOCATION_NAME;
-	let forecastPromise: Promise<ForecastType>;
+	let selectedForecasts: ForecastRecord[] = $state([]);
+	let locationName: string = $state(PLACEHOLDER_LOCATION_NAME);
+	let forecastPromise: Promise<ForecastType> = $state();
 
 	onMount(async () => {
 		let coordinates = getCoordinates();
@@ -28,14 +28,14 @@
 		locationName = d?.locationName ?? PLACEHOLDER_LOCATION_NAME;
 	});
 
-	$: maxTemperature = selectedForecasts.reduce((acc, { temperature }) => {
+	let maxTemperature = $derived(selectedForecasts.reduce((acc, { temperature }) => {
 		if (acc < temperature) return temperature;
 		return acc;
-	}, 0);
-	$: maxUvIndex = selectedForecasts.reduce((acc, { uvIndex }) => {
+	}, 0));
+	let maxUvIndex = $derived(selectedForecasts.reduce((acc, { uvIndex }) => {
 		if (acc < uvIndex) return uvIndex;
 		return acc;
-	}, 0);
+	}, 0));
 
 	const handleLocationChange = async (location: Coordinates) => {
 		await updateForecast(location);
