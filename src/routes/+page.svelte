@@ -12,7 +12,7 @@
 		{#await getForecast(coordinates.lat, coordinates.long)}
 			<div>loading</div>
 			{:then forecast}
-	<Chart data={forecast.hourly.map(({uvIndex}) => uvIndex)} />
+	<Chart data={forecast.hourly.map(({uvIndex, time}) => ({uvIndex,time}))} />
 			{/await}
 		{/if}
 		<Dashboard />
