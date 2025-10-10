@@ -60,9 +60,9 @@
 			<div class="spinner"><Paw strokeColour={colour.lightBlue} /></div>
 		{:then _}
 			{#if $forecastStore}
-				<ForecastChart forecast={selectedForecasts} />
 				<Forecast forecast={selectedForecasts} />
 				<Glance {maxTemperature} {maxUvIndex} />
+				<ForecastChart forecast={selectedForecasts} />
 				<Recommendations forecasts={selectedForecasts} />
 			{/if}
 		{/await}

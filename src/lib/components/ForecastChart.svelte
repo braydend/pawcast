@@ -35,6 +35,9 @@
 			gRoot.append('path').attr('class', 'line-temp').attr('fill', 'none');
 			gRoot.append('path').attr('class', 'line-uv').attr('fill', 'none');
 			gRoot.append('g').attr('class', 'legend');
+			// Axis labels (created once; positioned each render)
+			gRoot.append('text').attr('class', 'y-label-left').attr('font-size', 12);
+			gRoot.append('text').attr('class', 'y-label-right').attr('font-size', 12);
 		} else {
 			svg.attr('width', width).attr('height', height);
 			gRoot!.select('.y-axis-right').attr('transform', `translate(${innerWidth},0)`);
@@ -84,6 +87,18 @@
 			.call(xAxis);
 		(gRoot!.select('.y-axis-left') as d3.Selection<SVGGElement, unknown, null, undefined>).call(yLeftAxis);
 		(gRoot!.select('.y-axis-right') as d3.Selection<SVGGElement, unknown, null, undefined>).call(yRightAxis);
+
+		// Axis labels
+		gRoot!
+			.select<SVGTextElement>('.y-label-left')
+			.attr('transform', `translate(${-28},${innerHeight / 2}) rotate(-90)`)
+			.attr('text-anchor', 'middle')
+			.text('Temperature (°C)');
+		gRoot!
+			.select<SVGTextElement>('.y-label-right')
+			.attr('transform', `translate(${innerWidth + 20},${innerHeight / 2}) rotate(90)`)
+			.attr('text-anchor', 'middle')
+			.text('UV Index');
 
 		const tempLine = d3
 			.line<{ time: Date; temp: number }>()
