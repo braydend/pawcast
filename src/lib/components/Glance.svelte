@@ -1,57 +1,57 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { getColourForGrade } from '$lib/colours';
 	import { temperatureLimits } from '$lib/domain/recommendation/dogSafety';
 	import { uvIndexLimits } from '$lib/domain/recommendation/humanSafety';
 	import Paw from '$lib/icons/Paw.svelte';
 	import Sun from '$lib/icons/Sun.svelte';
 	import * as Card from '$lib/shadcn/ui/card';
-	import type { Grade } from '$lib/types';
+	import type { ForecastRecord, Grade } from '$lib/types';
 
 	interface Props {
-		maxTemperature: number;
-		maxUvIndex: number;
+		forecast: ForecastRecord[];
 	}
 
-	let { maxTemperature, maxUvIndex }: Props = $props();
+	let { forecast }: Props = $props();
 
-	let dogRating: Grade = $state('safe');
-	let uvRating: Grade = $state('safe');
+	const getMaxTemperature = (forecast: ForecastRecord[]) => forecast.reduce((acc, { temperature }) => {
+		if (acc < temperature) return temperature;
+		return acc;
+	}, 0);
+	let getMaxUvIndex = (forecast: ForecastRecord[]) => forecast.reduce((acc, { uvIndex }) => {
+		if (acc < uvIndex) return uvIndex;
+		return acc;
+	}, 0);
 
-	run(() => {
+	const getTemperatureRating = (forecast: ForecastRecord[]): Grade => {
+		const maxTemperature = getMaxTemperature(forecast);
 		switch (true) {
 			case maxTemperature < temperatureLimits.safe:
-				dogRating = 'safe';
-				break;
+				return 'safe';
 			case maxTemperature < temperatureLimits.warning:
-				dogRating = 'warning';
-				break;
+				return 'warning';
 			case maxTemperature < temperatureLimits.danger:
-				dogRating = 'danger';
-				break;
+				return 'danger';
 			default:
-				dogRating = 'extreme';
-				break;
+				return 'extreme';
 		}
-	});
+	};
 
-	run(() => {
+	const getUvRating = (forecast: ForecastRecord[]): Grade => {
+		const maxUvIndex = getMaxUvIndex(forecast);
 		switch (true) {
 			case maxUvIndex < uvIndexLimits.safe:
-				uvRating = 'safe';
-				break;
+				return 'safe';
 			case maxUvIndex < uvIndexLimits.warning:
-				uvRating = 'warning';
-				break;
+				return 'warning';
 			case maxUvIndex < uvIndexLimits.danger:
-				uvRating = 'danger';
-				break;
+				return 'danger';
 			default:
-				uvRating = 'extreme';
-				break;
+				return 'extreme';
 		}
-	});
+	}
+
+	const dogRating = getTemperatureRating( forecast);
+	const uvRating = getUvRating(forecast);
 </script>
 
 <Card.Root class="flex flex-col items-center row-start-1 md:row-start-auto">
@@ -60,13 +60,13 @@
 	</Card.Header>
 	<Card.Content class="flex flex-col items-center">
 		<Paw strokeColour={getColourForGrade(dogRating)} />
-		<p>Max {Math.round(maxTemperature)}&deg;C</p>
+		<p>Max {Math.round(getMaxTemperature(forecast))}&deg;C</p>
 	</Card.Content>
 	<Card.Header>
 		<Card.Title>Human safety (UV):</Card.Title>
 	</Card.Header>
 	<Card.Content class="flex flex-col items-center">
 		<Sun strokeColour={getColourForGrade(uvRating)} />
-		<p>Max UV index {Math.round(maxUvIndex)}</p>
+		<p>Max UV index {Math.round(getMaxUvIndex(forecast))}</p>
 	</Card.Content>
 </Card.Root>

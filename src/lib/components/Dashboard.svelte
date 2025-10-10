@@ -27,16 +27,7 @@
 		selectedForecasts = d?.hourly.slice(0, 24) ?? [];
 		locationName = d?.locationName ?? PLACEHOLDER_LOCATION_NAME;
 	});
-
-	let maxTemperature = $derived(selectedForecasts.reduce((acc, { temperature }) => {
-		if (acc < temperature) return temperature;
-		return acc;
-	}, 0));
-	let maxUvIndex = $derived(selectedForecasts.reduce((acc, { uvIndex }) => {
-		if (acc < uvIndex) return uvIndex;
-		return acc;
-	}, 0));
-
+	
 	const handleLocationChange = async (location: Coordinates) => {
 		await updateForecast(location);
 	};
@@ -60,7 +51,7 @@
 		{:then _}
 			{#if $forecastStore}
 				<Forecast forecast={selectedForecasts} />
-				<Glance {maxTemperature} {maxUvIndex} />
+				<Glance forecast={selectedForecasts} />
 				<Recommendations forecasts={selectedForecasts} />
 			{/if}
 		{/await}
