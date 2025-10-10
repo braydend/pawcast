@@ -2,6 +2,7 @@
 	import { colour } from '$lib/colours';
 	import Forecast from '$lib/components/Forecast.svelte';
 	import Glance from '$lib/components/Glance.svelte';
+	import ForecastChart from '$lib/components/ForecastChart.svelte';
 	import LocationPicker from '$lib/components/LocationPicker.svelte';
 	import { getCoordinates, setCoordinates } from '$lib/coordinatesUrlStore';
 	import Paw from '$lib/icons/Paw.svelte';
@@ -61,6 +62,7 @@
 			{#if $forecastStore}
 				<Forecast forecast={selectedForecasts} />
 				<Glance {maxTemperature} {maxUvIndex} />
+				<ForecastChart forecast={selectedForecasts} />
 				<Recommendations forecasts={selectedForecasts} />
 			{/if}
 		{/await}
