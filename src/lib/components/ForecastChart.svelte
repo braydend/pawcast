@@ -2,6 +2,7 @@
 	import type { ForecastRecord } from '$lib/types';
 	import { onDestroy, onMount } from 'svelte';
 	import * as d3 from 'd3';
+	import ChartTooltip, { type TooltipData } from './chart/ChartTooltip.svelte';
 
 	interface Props {
 		forecast: ForecastRecord[];
@@ -9,139 +10,166 @@
 	}
 
 	let { forecast, height = 280 }: Props = $props();
-	type DataPoint = { time: Date; temp: number; uvi: number; description: string; rain: number };
+
+	// Series colors
+	const COLOR_TEMP = '#0ea5e9'; // tailwind sky-500
+	const COLOR_UV = '#f97316'; // tailwind orange-500
+
+	// Layout
+	const MARGIN = { top: 24, right: 48, bottom: 28, left: 44 } as const;
+
+	type ChartPoint = {
+		time: Date;
+		temperatureC: number;
+		uvIndex: number;
+		description: string;
+		rainMm: number;
+	};
 
 	let containerEl: HTMLDivElement | undefined;
-	let svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | undefined;
-	let gRoot: d3.Selection<SVGGElement, unknown, null, undefined> | undefined;
+	let svgRoot: d3.Selection<SVGSVGElement, unknown, null, undefined> | undefined;
+	let chartGroup: d3.Selection<SVGGElement, unknown, null, undefined> | undefined;
 	let resizeObserver: ResizeObserver | undefined;
-	let tooltipEl: HTMLDivElement | undefined;
+
+	// Tooltip state (Svelte-rendered; no innerHTML)
+	let hoveredPoint: TooltipData | null = $state(null);
+	let tooltipLeft = $state(0);
+	let tooltipTop = $state(0);
+	let tooltipVisible = $state(false);
 
 	function render() {
 		if (!containerEl) return;
 		const width = containerEl.clientWidth;
-		const margin = { top: 24, right: 48, bottom: 28, left: 44 };
-		const innerWidth = Math.max(0, width - margin.left - margin.right);
-		const innerHeight = Math.max(0, height - margin.top - margin.bottom);
+		const innerWidth = Math.max(0, width - MARGIN.left - MARGIN.right);
+		const innerHeight = Math.max(0, height - MARGIN.top - MARGIN.bottom);
 
-		if (!svg) {
-			svg = d3
+		if (!svgRoot) {
+			svgRoot = d3
 				.select(containerEl)
 				.append('svg')
 				.attr('width', width)
 				.attr('height', height);
-			gRoot = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-			gRoot.append('g').attr('class', 'x-axis');
-			gRoot.append('g').attr('class', 'y-axis-left');
-			gRoot.append('g').attr('class', 'y-axis-right').attr('transform', `translate(${innerWidth},0)`);
-			gRoot.append('path').attr('class', 'line-temp').attr('fill', 'none');
-			gRoot.append('path').attr('class', 'line-uv').attr('fill', 'none');
-			gRoot.append('g').attr('class', 'legend');
-			// Axis labels (created once; positioned each render)
-			gRoot.append('text').attr('class', 'y-label-left').attr('font-size', 12);
-			gRoot.append('text').attr('class', 'y-label-right').attr('font-size', 12);
+			chartGroup = svgRoot
+				.append('g')
+				.attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+			chartGroup.append('g').attr('class', 'x-axis');
+			chartGroup.append('g').attr('class', 'y-axis-left');
+			chartGroup
+				.append('g')
+				.attr('class', 'y-axis-right')
+				.attr('transform', `translate(${innerWidth},0)`);
+			chartGroup.append('path').attr('class', 'line-temperature').attr('fill', 'none');
+			chartGroup.append('path').attr('class', 'line-uv').attr('fill', 'none');
+			chartGroup.append('g').attr('class', 'legend');
+			// Axis labels
+			chartGroup.append('text').attr('class', 'y-label-left').attr('font-size', 12);
+			chartGroup.append('text').attr('class', 'y-label-right').attr('font-size', 12);
 		} else {
-			svg.attr('width', width).attr('height', height);
-			gRoot!.select('.y-axis-right').attr('transform', `translate(${innerWidth},0)`);
+			svgRoot.attr('width', width).attr('height', height);
+			chartGroup!.select('.y-axis-right').attr('transform', `translate(${innerWidth},0)`);
 		}
 
-		// Data guards
-		const data: DataPoint[] = (forecast ?? []).map((d) => ({
+		// Prepare data
+		const data: ChartPoint[] = (forecast ?? []).map((d) => ({
 			time: new Date(d.time * 1000),
-			temp: d.temperature,
-			uvi: d.uvIndex,
+			temperatureC: d.temperature,
+			uvIndex: d.uvIndex,
 			description: d.description,
-			rain: d.rain ?? 0
+			rainMm: d.rain ?? 0
 		}));
+
 		if (!data.length) {
-			// clear
-			gRoot!.selectAll('.line-temp,.line-uv').attr('d', null);
-			gRoot!.selectAll('.x-axis,.y-axis-left,.y-axis-right').selectAll('*').remove();
-			gRoot!.select('.legend').selectAll('*').remove();
-			gRoot!.selectAll('.focus').style('display', 'none');
-			if (tooltipEl) tooltipEl.style.opacity = '0';
+			chartGroup!.selectAll('.line-temperature,.line-uv').attr('d', null);
+			chartGroup!.selectAll('.x-axis,.y-axis-left,.y-axis-right').selectAll('*').remove();
+			chartGroup!.select('.legend').selectAll('*').remove();
+			chartGroup!.selectAll('.focus').style('display', 'none');
+			tooltipVisible = false;
 			return;
 		}
 
-		const x = d3
+		// Scales
+		const xScale = d3
 			.scaleTime()
 			.domain(d3.extent(data, (d) => d.time) as [Date, Date])
 			.range([0, innerWidth]);
 
-		const tempMin = d3.min(data, (d) => d.temp) ?? 0;
-		const tempMax = d3.max(data, (d) => d.temp) ?? 0;
-		const yLeft = d3
+		const temperatureMin = d3.min(data, (d) => d.temperatureC) ?? 0;
+		const temperatureMax = d3.max(data, (d) => d.temperatureC) ?? 0;
+		const yTempScale = d3
 			.scaleLinear()
-			.domain([Math.floor(tempMin - 2), Math.ceil(tempMax + 2)])
+			.domain([Math.floor(temperatureMin - 2), Math.ceil(temperatureMax + 2)])
 			.nice()
 			.range([innerHeight, 0]);
 
-		const uvMax = Math.max(11, d3.max(data, (d) => d.uvi) ?? 0);
-		const yRight = d3
+		const uvMax = Math.max(11, d3.max(data, (d) => d.uvIndex) ?? 0);
+		const yUvScale = d3
 			.scaleLinear()
 			.domain([0, uvMax])
 			.nice()
 			.range([innerHeight, 0]);
 
-		const timeFmt = d3.timeFormat('%-I%p');
-		const xAxis = d3.axisBottom<Date>(x).ticks(6).tickFormat((d: Date) => timeFmt(d));
-		const yLeftAxis = d3.axisLeft(yLeft).ticks(5).tickFormat((d: number | string) => `${d}`);
-		const yRightAxis = d3.axisRight(yRight).ticks(5).tickFormat((d: number | string) => `${d}`);
+		// Axes
+		const shortTime = d3.timeFormat('%-I%p');
+		const xAxis = d3.axisBottom<Date>(xScale).ticks(6).tickFormat((d: Date) => shortTime(d));
+		const yLeftAxis = d3.axisLeft(yTempScale).ticks(5).tickFormat((d: number | string) => `${d}`);
+		const yRightAxis = d3.axisRight(yUvScale).ticks(5).tickFormat((d: number | string) => `${d}`);
 
-		(gRoot!.select('.x-axis') as d3.Selection<SVGGElement, unknown, null, undefined>)
+		(chartGroup!.select('.x-axis') as d3.Selection<SVGGElement, unknown, null, undefined>)
 			.attr('transform', `translate(0,${innerHeight})`)
 			.call(xAxis);
-		(gRoot!.select('.y-axis-left') as d3.Selection<SVGGElement, unknown, null, undefined>).call(yLeftAxis);
-		(gRoot!.select('.y-axis-right') as d3.Selection<SVGGElement, unknown, null, undefined>).call(yRightAxis);
+		(chartGroup!.select('.y-axis-left') as d3.Selection<SVGGElement, unknown, null, undefined>).call(yLeftAxis);
+		(chartGroup!.select('.y-axis-right') as d3.Selection<SVGGElement, unknown, null, undefined>).call(yRightAxis);
 
 		// Axis labels
-		gRoot!
+		chartGroup!
 			.select<SVGTextElement>('.y-label-left')
-			.attr('transform', `translate(${-28},${innerHeight / 2}) rotate(-90)`)
+			.attr('transform', `translate(${-28},${innerHeight / 2}) rotate(-90)`) // minor tightened offset
 			.attr('text-anchor', 'middle')
 			.text('Temperature (°C)');
-		gRoot!
+
+		chartGroup!
 			.select<SVGTextElement>('.y-label-right')
-			.attr('transform', `translate(${innerWidth + 20},${innerHeight / 2}) rotate(90)`)
+			.attr('transform', `translate(${innerWidth + 20},${innerHeight / 2}) rotate(90)`) // minor tightened offset
 			.attr('text-anchor', 'middle')
 			.text('UV Index');
 
-		const tempLine = d3
-			.line<{ time: Date; temp: number }>()
-			.x((d) => x(d.time))
-			.y((d) => yLeft(d.temp))
+		// Lines
+		const temperatureLine = d3
+			.line<{ time: Date; temperatureC: number }>()
+			.x((d) => xScale(d.time))
+			.y((d) => yTempScale(d.temperatureC))
 			.curve(d3.curveMonotoneX);
 
 		const uvLine = d3
-			.line<{ time: Date; uvi: number }>()
-			.x((d) => x(d.time))
-			.y((d) => yRight(d.uvi))
+			.line<{ time: Date; uvIndex: number }>()
+			.x((d) => xScale(d.time))
+			.y((d) => yUvScale(d.uvIndex))
 			.curve(d3.curveMonotoneX);
 
-		gRoot!
-			.select<SVGPathElement>('.line-temp')
-			.datum(data.map((d) => ({ time: d.time, temp: d.temp })))
-			.attr('stroke', '#0ea5e9')
+		chartGroup!
+			.select<SVGPathElement>('.line-temperature')
+			.datum(data.map((d) => ({ time: d.time, temperatureC: d.temperatureC })))
+			.attr('stroke', COLOR_TEMP)
 			.attr('stroke-width', 2)
-			.attr('d', tempLine);
+			.attr('d', temperatureLine);
 
-		gRoot!
+		chartGroup!
 			.select<SVGPathElement>('.line-uv')
-			.datum(data.map((d) => ({ time: d.time, uvi: d.uvi })))
-			.attr('stroke', '#f97316')
+			.datum(data.map((d) => ({ time: d.time, uvIndex: d.uvIndex })))
+			.attr('stroke', COLOR_UV)
 			.attr('stroke-width', 2)
 			.attr('d', uvLine);
 
-		// Legend
-		const legend = gRoot!.select<SVGGElement>('.legend');
-		const items = [
-			{ color: '#0ea5e9', label: 'Temperature (°C)' },
-			{ color: '#f97316', label: 'UV Index' }
+		// Legend (kept as SVG for minimal change)
+		const legend = chartGroup!.select<SVGGElement>('.legend');
+		const legendItems = [
+			{ color: COLOR_TEMP, label: 'Temperature (°C)' },
+			{ color: COLOR_UV, label: 'UV Index' }
 		];
 		const legendItem = legend
 			.attr('transform', `translate(0,${-8})`)
 			.selectAll('g')
-			.data(items)
+			.data(legendItems)
 			.join((enter) => enter.append('g'))
 			.attr('transform', (_, i) => `translate(${i * 160},0)`);
 		legendItem
@@ -162,86 +190,81 @@
 			.attr('font-size', 12)
 			.text((d) => d.label);
 
-		// Tooltip div (HTML) created once
-		if (!tooltipEl) {
-			tooltipEl = document.createElement('div');
-			tooltipEl.className = 'chart-tooltip';
-			tooltipEl.style.position = 'absolute';
-			tooltipEl.style.pointerEvents = 'none';
-			tooltipEl.style.opacity = '0';
-			containerEl.appendChild(tooltipEl);
-		}
-
-		// Focus group (guideline + circles), created once
-		let focus = gRoot!.select<SVGGElement>('.focus');
+		// Focus group (guideline + circles)
+		let focus = chartGroup!.select<SVGGElement>('.focus');
 		if (focus.empty()) {
-			focus = gRoot!.append('g').attr('class', 'focus').style('display', 'none');
-			focus.append('line').attr('class', 'focus-line').attr('stroke', '#9ca3af').attr('stroke-dasharray', '4,4');
-			focus.append('circle').attr('class', 'focus-temp').attr('r', 4).attr('stroke', '#0ea5e9').attr('fill', '#fff');
-			focus.append('circle').attr('class', 'focus-uv').attr('r', 4).attr('stroke', '#f97316').attr('fill', '#fff');
+			focus = chartGroup!.append('g').attr('class', 'focus').style('display', 'none');
+			focus
+				.append('line')
+				.attr('class', 'focus-line')
+				.attr('stroke', '#9ca3af')
+				.attr('stroke-dasharray', '4,4');
+			focus.append('circle').attr('class', 'focus-temp').attr('r', 4).attr('stroke', COLOR_TEMP).attr('fill', '#fff');
+			focus.append('circle').attr('class', 'focus-uv').attr('r', 4).attr('stroke', COLOR_UV).attr('fill', '#fff');
 		}
+		// Position the guideline to plotting height
+		focus.select<SVGLineElement>('.focus-line').attr('y1', 0).attr('y2', innerHeight);
 
-		// Position the focus line to span the plotting area each render
-		focus.select<SVGLineElement>('.focus-line')
-			.attr('y1', 0)
-			.attr('y2', innerHeight);
+		// find nearest by time
+		const bisectTime = d3.bisector<ChartPoint, Date>((d) => d.time).left;
 
-		const bisectDate = d3.bisector<DataPoint, Date>((d) => d.time).left;
-		const longTimeFmt = d3.timeFormat('%-I:%M %p, %a %b %-d');
-
-		function showAt(d: DataPoint) {
-			const cx = x(d.time);
-			const cyTemp = yLeft(d.temp);
-			const cyUv = yRight(d.uvi);
+		function showAt(point: ChartPoint) {
+			const cx = xScale(point.time);
+			const cyTemp = yTempScale(point.temperatureC);
+			const cyUv = yUvScale(point.uvIndex);
 
 			focus.style('display', null);
 			focus.select<SVGLineElement>('.focus-line').attr('x1', cx).attr('x2', cx);
 			focus.select<SVGCircleElement>('.focus-temp').attr('cx', cx).attr('cy', cyTemp);
 			focus.select<SVGCircleElement>('.focus-uv').attr('cx', cx).attr('cy', cyUv);
 
-			if (tooltipEl && containerEl) {
-				tooltipEl.style.opacity = '1';
-				tooltipEl.innerHTML = `
-					<div class="tt-time">${longTimeFmt(d.time)}</div>
-					<div class="tt-row"><span class="swatch" style="background:#0ea5e9"></span>Temp: <strong>${d.temp.toFixed(1)}°C</strong></div>
-					<div class="tt-row"><span class="swatch" style="background:#f97316"></span>UV: <strong>${d.uvi.toFixed(1)}</strong></div>
-					${d.rain ? `<div class="tt-row">Rain: <strong>${d.rain.toFixed(1)} mm</strong></div>` : ''}
-					<div class="tt-desc">${d.description}</div>
-				`;
-				const rect = containerEl.getBoundingClientRect();
-				// Position near the vertical line, with small offset and clamped inside container
-				const offset = 12;
-				const ttBox = tooltipEl.getBoundingClientRect();
-				let left = margin.left + cx + offset;
-				if (left + ttBox.width - rect.left > rect.width) {
-					left = margin.left + cx - ttBox.width - offset;
-				}
-				let top = margin.top + Math.min(cyTemp, cyUv) - 8;
-				if (top < 0) top = 0;
-				tooltipEl.style.left = `${left}px`;
-				tooltipEl.style.top = `${top}px`;
-			}
+			// Update tooltip state for Svelte component
+				hoveredPoint = {
+					time: point.time,
+					temperatureC: point.temperatureC,
+					uvIndex: point.uvIndex,
+					rainMm: point.rainMm,
+					description: point.description
+				};
+			// position near the vertical line, clamped into container
+			const offset = 12;
+			const leftCandidate = MARGIN.left + cx + offset;
+			const rightCandidate = MARGIN.left + cx - offset; // used when tooltip would overflow
+			// Estimate width after first render; we don't know size here, so we clamp conservatively
+			const containerWidth = width;
+			const approximateTooltipWidth = 200; // conservative
+			tooltipLeft = leftCandidate + approximateTooltipWidth > containerWidth ? rightCandidate - approximateTooltipWidth : leftCandidate;
+			tooltipTop = MARGIN.top + Math.min(cyTemp, cyUv) - 8;
+			if (tooltipTop < 0) tooltipTop = 0;
+			tooltipVisible = true;
 		}
 
-		function onMouseMove(event: MouseEvent) {
-			const [mx] = d3.pointer(event, gRoot!.node() as Element);
-			const x0 = x.invert(mx);
-			let i = bisectDate(data, x0, 1);
-			if (i >= data.length) i = data.length - 1;
-			if (i <= 0) i = 0;
-			const d0 = data[i - 1] ?? data[i];
-			const d1 = data[i];
-			const d = (!d0 ? d1 : !d1 ? d0 : (x0.getTime() - d0.time.getTime() > d1.time.getTime() - x0.getTime() ? d1 : d0)) as DataPoint;
-			showAt(d);
+		function handleMouseMove(event: MouseEvent) {
+			const [mouseX] = d3.pointer(event, chartGroup!.node() as Element);
+			const xAtCursor = xScale.invert(mouseX);
+			let index = bisectTime(data, xAtCursor, 1);
+			if (index >= data.length) index = data.length - 1;
+			if (index <= 0) index = 0;
+			const prev = data[index - 1] ?? data[index];
+			const next = data[index];
+			const chosen = !prev
+				? next
+				: !next
+				? prev
+				: xAtCursor.getTime() - prev.time.getTime() > next.time.getTime() - xAtCursor.getTime()
+				? next
+				: prev;
+			showAt(chosen as ChartPoint);
 		}
 
-		function onMouseLeave() {
+		function handleMouseLeave() {
 			focus.style('display', 'none');
-			if (tooltipEl) tooltipEl.style.opacity = '0';
+			hoveredPoint = null;
+			tooltipVisible = false;
 		}
 
-		// Overlay to capture mouse events, sized each render
-		gRoot!
+		// Overlay for mouse events
+		chartGroup!
 			.selectAll('rect.overlay')
 			.data([null])
 			.join('rect')
@@ -252,12 +275,12 @@
 			.attr('height', innerHeight)
 			.attr('fill', 'transparent')
 			.style('cursor', 'crosshair')
-			.on('mousemove', onMouseMove)
+			.on('mousemove', handleMouseMove)
 			.on('mouseenter', () => {
 				focus.style('display', null);
-				if (tooltipEl) tooltipEl.style.opacity = '1';
+				tooltipVisible = true;
 			})
-			.on('mouseleave', onMouseLeave);
+			.on('mouseleave', handleMouseLeave);
 	}
 
 	onMount(() => {
@@ -277,39 +300,19 @@
 	onDestroy(() => {
 		resizeObserver?.disconnect();
 		resizeObserver = undefined;
-		svg = undefined;
-		gRoot = undefined;
+		svgRoot = undefined;
+		chartGroup = undefined;
 	});
 </script>
 
 <section class="chart-section">
 	<h2 class="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">Temperature & UV</h2>
-	<div bind:this={containerEl} class="chart-container" aria-label="Temperature and UV line chart"></div>
+	<div bind:this={containerEl} class="relative h-auto w-full" aria-label="Temperature and UV line chart">
+		<ChartTooltip data={hoveredPoint} left={tooltipLeft} top={tooltipTop} visible={tooltipVisible} />
+	</div>
 </section>
 
 <style>
-	.chart-container {
-		position: relative;
-		width: 100%;
-		height: auto;
-	}
-
-	:global(.chart-tooltip) {
-		color: inherit;
-		border: 1px solid #e5e7eb; /* gray-200 */
-		border-radius: 0.375rem; /* rounded-md */
-		box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-		padding: 8px 10px;
-		font-size: 12px;
-		line-height: 1.2;
-		max-width: 220px;
-		z-index: 10;
-	}
-	:global(.chart-tooltip .tt-time) { font-weight: 600; margin-bottom: 4px; }
-	:global(.chart-tooltip .tt-row) { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
-	:global(.chart-tooltip .swatch) { display:inline-block; width:10px; height:10px; border-radius:2px; }
-	:global(.chart-tooltip .tt-desc) { margin-top: 4px; opacity: 0.9; }
-
 	:global(svg text) {
 		fill: currentColor;
 	}
