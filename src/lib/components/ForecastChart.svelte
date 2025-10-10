@@ -9,11 +9,13 @@
 	}
 
 	let { forecast, height = 280 }: Props = $props();
+	type DataPoint = { time: Date; temp: number; uvi: number; description: string; rain: number };
 
 	let containerEl: HTMLDivElement | undefined;
 	let svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | undefined;
 	let gRoot: d3.Selection<SVGGElement, unknown, null, undefined> | undefined;
 	let resizeObserver: ResizeObserver | undefined;
+	let tooltipEl: HTMLDivElement | undefined;
 
 	function render() {
 		if (!containerEl) return;
@@ -44,16 +46,20 @@
 		}
 
 		// Data guards
-		const data = (forecast ?? []).map((d) => ({
+		const data: DataPoint[] = (forecast ?? []).map((d) => ({
 			time: new Date(d.time * 1000),
 			temp: d.temperature,
-			uvi: d.uvIndex
+			uvi: d.uvIndex,
+			description: d.description,
+			rain: d.rain ?? 0
 		}));
 		if (!data.length) {
 			// clear
 			gRoot!.selectAll('.line-temp,.line-uv').attr('d', null);
 			gRoot!.selectAll('.x-axis,.y-axis-left,.y-axis-right').selectAll('*').remove();
 			gRoot!.select('.legend').selectAll('*').remove();
+			gRoot!.selectAll('.focus').style('display', 'none');
+			if (tooltipEl) tooltipEl.style.opacity = '0';
 			return;
 		}
 
@@ -155,6 +161,103 @@
 			.attr('y', 10)
 			.attr('font-size', 12)
 			.text((d) => d.label);
+
+		// Tooltip div (HTML) created once
+		if (!tooltipEl) {
+			tooltipEl = document.createElement('div');
+			tooltipEl.className = 'chart-tooltip';
+			tooltipEl.style.position = 'absolute';
+			tooltipEl.style.pointerEvents = 'none';
+			tooltipEl.style.opacity = '0';
+			containerEl.appendChild(tooltipEl);
+		}
+
+		// Focus group (guideline + circles), created once
+		let focus = gRoot!.select<SVGGElement>('.focus');
+		if (focus.empty()) {
+			focus = gRoot!.append('g').attr('class', 'focus').style('display', 'none');
+			focus.append('line').attr('class', 'focus-line').attr('stroke', '#9ca3af').attr('stroke-dasharray', '4,4');
+			focus.append('circle').attr('class', 'focus-temp').attr('r', 4).attr('stroke', '#0ea5e9').attr('fill', '#fff');
+			focus.append('circle').attr('class', 'focus-uv').attr('r', 4).attr('stroke', '#f97316').attr('fill', '#fff');
+		}
+
+		// Position the focus line to span the plotting area each render
+		focus.select<SVGLineElement>('.focus-line')
+			.attr('y1', 0)
+			.attr('y2', innerHeight);
+
+		const bisectDate = d3.bisector<DataPoint, Date>((d) => d.time).left;
+		const longTimeFmt = d3.timeFormat('%-I:%M %p, %a %b %-d');
+
+		function showAt(d: DataPoint) {
+			const cx = x(d.time);
+			const cyTemp = yLeft(d.temp);
+			const cyUv = yRight(d.uvi);
+
+			focus.style('display', null);
+			focus.select<SVGLineElement>('.focus-line').attr('x1', cx).attr('x2', cx);
+			focus.select<SVGCircleElement>('.focus-temp').attr('cx', cx).attr('cy', cyTemp);
+			focus.select<SVGCircleElement>('.focus-uv').attr('cx', cx).attr('cy', cyUv);
+
+			if (tooltipEl && containerEl) {
+				tooltipEl.style.opacity = '1';
+				tooltipEl.innerHTML = `
+					<div class="tt-time">${longTimeFmt(d.time)}</div>
+					<div class="tt-row"><span class="swatch" style="background:#0ea5e9"></span>Temp: <strong>${d.temp.toFixed(1)}°C</strong></div>
+					<div class="tt-row"><span class="swatch" style="background:#f97316"></span>UV: <strong>${d.uvi.toFixed(1)}</strong></div>
+					${d.rain ? `<div class="tt-row">Rain: <strong>${d.rain.toFixed(1)} mm</strong></div>` : ''}
+					<div class="tt-desc">${d.description}</div>
+				`;
+				const rect = containerEl.getBoundingClientRect();
+				// Position near the vertical line, with small offset and clamped inside container
+				const offset = 12;
+				const ttBox = tooltipEl.getBoundingClientRect();
+				let left = margin.left + cx + offset;
+				if (left + ttBox.width - rect.left > rect.width) {
+					left = margin.left + cx - ttBox.width - offset;
+				}
+				let top = margin.top + Math.min(cyTemp, cyUv) - 8;
+				if (top < 0) top = 0;
+				tooltipEl.style.left = `${left}px`;
+				tooltipEl.style.top = `${top}px`;
+			}
+		}
+
+		function onMouseMove(event: MouseEvent) {
+			const [mx] = d3.pointer(event, gRoot!.node() as Element);
+			const x0 = x.invert(mx);
+			let i = bisectDate(data, x0, 1);
+			if (i >= data.length) i = data.length - 1;
+			if (i <= 0) i = 0;
+			const d0 = data[i - 1] ?? data[i];
+			const d1 = data[i];
+			const d = (!d0 ? d1 : !d1 ? d0 : (x0.getTime() - d0.time.getTime() > d1.time.getTime() - x0.getTime() ? d1 : d0)) as DataPoint;
+			showAt(d);
+		}
+
+		function onMouseLeave() {
+			focus.style('display', 'none');
+			if (tooltipEl) tooltipEl.style.opacity = '0';
+		}
+
+		// Overlay to capture mouse events, sized each render
+		gRoot!
+			.selectAll('rect.overlay')
+			.data([null])
+			.join('rect')
+			.attr('class', 'overlay')
+			.attr('x', 0)
+			.attr('y', 0)
+			.attr('width', innerWidth)
+			.attr('height', innerHeight)
+			.attr('fill', 'transparent')
+			.style('cursor', 'crosshair')
+			.on('mousemove', onMouseMove)
+			.on('mouseenter', () => {
+				focus.style('display', null);
+				if (tooltipEl) tooltipEl.style.opacity = '1';
+			})
+			.on('mouseleave', onMouseLeave);
 	}
 
 	onMount(() => {
@@ -186,9 +289,26 @@
 
 <style>
 	.chart-container {
+		position: relative;
 		width: 100%;
 		height: auto;
 	}
+
+	:global(.chart-tooltip) {
+		color: inherit;
+		border: 1px solid #e5e7eb; /* gray-200 */
+		border-radius: 0.375rem; /* rounded-md */
+		box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+		padding: 8px 10px;
+		font-size: 12px;
+		line-height: 1.2;
+		max-width: 220px;
+		z-index: 10;
+	}
+	:global(.chart-tooltip .tt-time) { font-weight: 600; margin-bottom: 4px; }
+	:global(.chart-tooltip .tt-row) { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+	:global(.chart-tooltip .swatch) { display:inline-block; width:10px; height:10px; border-radius:2px; }
+	:global(.chart-tooltip .tt-desc) { margin-top: 4px; opacity: 0.9; }
 
 	:global(svg text) {
 		fill: currentColor;
