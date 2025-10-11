@@ -1,4 +1,4 @@
-import { forecast } from '$lib/domain/forecast';
+import { getForecastForLatLong } from '$lib/domain/getForecastForLatLong';
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -9,7 +9,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		error(500, 'Missing latitude or longitude');
 	}
 
-	const result = await forecast(lat, long);
+	const result = await getForecastForLatLong(lat, long);
 
 	return json(result);
 };

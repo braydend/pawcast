@@ -1,7 +1,17 @@
 import { reverseGeolocate, forecast as owmForecast } from '$lib/openWeatherMap';
 import type { Forecast } from '$lib/types';
 
-export const forecast = async (lat: number, long: number): Promise<Forecast> => {
+export const getLast24HourForecastForLatLong = async (lat: number, long: number): Promise<Forecast> => {
+	const entireForecast = await getForecastForLatLong(lat, long);
+
+	return {
+		locationName: entireForecast.locationName,
+		hourly:
+			entireForecast.hourly.slice(0, 24)
+	};
+}
+
+const getForecastForLatLong = async (lat: number, long: number): Promise<Forecast> => {
 	const [location] = await reverseGeolocate(lat, long);
 
 	const locationParts = [location.name, location.state, location.country].filter((part) =>
