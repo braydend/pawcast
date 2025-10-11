@@ -14,7 +14,7 @@
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
 	let forecast: ForecastRecord[] = $derived(initialForecast?.hourly ?? []);
-	let locationName: string = $state(PLACEHOLDER_LOCATION_NAME);
+	let locationName: string = $state(initialForecast?.locationName ?? PLACEHOLDER_LOCATION_NAME);
 
 	const handleLocationChange = async (location: Coordinates) => {
 		await setCoordinates(location);
