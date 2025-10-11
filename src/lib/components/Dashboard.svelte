@@ -3,58 +3,40 @@
 	import Forecast from '$lib/components/Forecast.svelte';
 	import Glance from '$lib/components/Glance.svelte';
 	import LocationPicker from '$lib/components/LocationPicker.svelte';
-	import { getCoordinates, setCoordinates } from '$lib/coordinatesUrlStore';
+	import { setCoordinates } from '$lib/coordinatesUrlStore';
 	import Paw from '$lib/icons/Paw.svelte';
-	import { forecastStore } from '$lib/stores/forecast';
 	import type { Coordinates, ForecastRecord, Forecast as ForecastType } from '$lib/types';
-	import { onMount } from 'svelte';
 	import Recommendations from './Recommendations.svelte';
-
+	import { navigating } from '$app/state';
+	
+	const { initialForecast } = $props<{ initialForecast?: ForecastType }>();
+	
 	const PLACEHOLDER_LOCATION_NAME = 'Select a location';
 
-	let selectedForecasts: ForecastRecord[] = $state([]);
+	let forecast: ForecastRecord[] = $derived(initialForecast?.hourly ?? []);
 	let locationName: string = $state(PLACEHOLDER_LOCATION_NAME);
-	let forecastPromise: Promise<ForecastType> = $state();
 
-	onMount(async () => {
-		let coordinates = getCoordinates();
-		if (!coordinates) return;
-
-		await updateForecast(coordinates);
-	});
-
-	forecastStore.subscribe((d) => {
-		selectedForecasts = d?.hourly.slice(0, 24) ?? [];
-		locationName = d?.locationName ?? PLACEHOLDER_LOCATION_NAME;
-	});
-	
 	const handleLocationChange = async (location: Coordinates) => {
-		await updateForecast(location);
+		await setCoordinates(location);
 	};
 
-	const updateForecast = async (location: Coordinates) => {
-		forecastPromise = fetch(`/api/forecast?lat=${location.lat}&long=${location.long}`).then((d) =>
-			d.json()
-		);
-
-		setCoordinates(location);
-		forecastStore.set(await forecastPromise);
-	};
+	let hasForecast = $derived(forecast.length > 0);
 </script>
 
 <main class="flex flex-col gap-4">
 	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">Pawcast</h1>
 	<div class="container">
-		<LocationPicker onLocationChange={handleLocationChange} {locationName} />
-		{#await forecastPromise}
+		<LocationPicker
+			onLocationChange={handleLocationChange}
+			{locationName} />
+
+		{#if navigating.to !== null}
 			<div class="spinner"><Paw strokeColour={colour.lightBlue} /></div>
-		{:then _}
-			{#if $forecastStore}
-				<Forecast forecast={selectedForecasts} />
-				<Glance forecast={selectedForecasts} />
-				<Recommendations forecasts={selectedForecasts} />
-			{/if}
-		{/await}
+		{:else if hasForecast}
+			<Forecast forecast={forecast} />
+			<Glance forecast={forecast} />
+			<Recommendations forecasts={forecast} />
+		{/if}
 	</div>
 </main>
 
